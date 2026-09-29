@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { Home, MessageSquare, MessageSquareMore, BarChart3, FileText, Settings, Download, Aperture, UserCircle, Lock, LockOpen, ChevronUp, FolderClosed, Footprints, Users, ArchiveRestore, Sparkles, CircleHelp } from 'lucide-react'
+import { Home, MessageSquare, BarChart3, FileText, Settings, Download, Aperture, UserCircle, Lock, LockOpen, ChevronUp, FolderClosed, Footprints, Users, ArchiveRestore, CircleHelp } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import * as configService from '../services/config'
 import { onExportSessionStatus, requestExportSessionStatus } from '../services/exportBridge'
-import { loadAgentPage } from '../pages/agent/loadAgentPage'
 import { openErrorReferenceWindow } from '../utils/errorReference'
 
 import './Sidebar.scss'
@@ -338,17 +337,6 @@ function Sidebar({ collapsed }: SidebarProps) {
             <span className="nav-label">聊天</span>
           </NavLink>
 
-          {/* AI Agent */}
-          <NavLink
-            to="/ai"
-            className={`nav-item ${isActive('/ai') ? 'active' : ''}`}
-            onPointerEnter={() => { void loadAgentPage() }}
-            title={collapsed ? 'AI Agent' : undefined}
-          >
-            <span className="nav-icon"><MessageSquareMore size={20} strokeWidth={1.8} /></span>
-            <span className="nav-label">AI Agent</span>
-          </NavLink>
-
           {/* 朋友圈 */}
           <NavLink
             to="/sns"
@@ -357,15 +345,6 @@ function Sidebar({ collapsed }: SidebarProps) {
           >
             <span className="nav-icon"><Aperture size={20} /></span>
             <span className="nav-label">朋友圈</span>
-          </NavLink>
-
-          <NavLink
-            to="/insight-inbox"
-            className={`nav-item ${isActive('/insight-inbox') ? 'active' : ''}`}
-            title={collapsed ? '灵感信箱' : undefined}
-          >
-            <span className="nav-icon"><Sparkles size={20} /></span>
-            <span className="nav-label">灵感信箱</span>
           </NavLink>
 
           {/* 通讯录 */}

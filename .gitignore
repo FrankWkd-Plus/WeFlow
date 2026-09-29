@@ -85,3 +85,5 @@ weflow-web-offical
 patches/
 mmtls/
 .tmp/
+# AI removal staging (2026-09-28)
+.ai-removal-trash/

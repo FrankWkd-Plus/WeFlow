@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertCircle, AtSign, CheckCircle2, Download, Loader2, MessageCircle, RefreshCw, Search, Sparkles, Users } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Download, MessageCircle, RefreshCw, Search, Users } from 'lucide-react'
 import DateRangePicker from '../components/DateRangePicker'
 import './MyFootprintPage.scss'
 
@@ -9,7 +9,6 @@ type TimelineMode = 'all' | 'mention' | 'private'
 type TimelineTimeMode = 'clock' | 'month_day_clock' | 'full_date_clock'
 type PrivateDotVariant = 'both' | 'inbound_only' | 'outbound_only'
 type ExportModalStatus = 'idle' | 'progress' | 'success' | 'error'
-type FootprintAiStatus = 'idle' | 'loading' | 'success' | 'error'
 
 interface MyFootprintSummary {
   private_inbound_people: number
@@ -337,8 +336,6 @@ function MyFootprintPage() {
   const [exportModalDescription, setExportModalDescription] = useState('')
   const [exportModalPath, setExportModalPath] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [footprintAiStatus, setFootprintAiStatus] = useState<FootprintAiStatus>('idle')
-  const [footprintAiText, setFootprintAiText] = useState('')
   const inflightRangeKeyRef = useRef<string | null>(null)
 
   const currentRange = useMemo(() => buildRange(preset, customStartDate, customEndDate), [preset, customStartDate, customEndDate])
@@ -641,41 +638,6 @@ function MyFootprintPage() {
     }
   }, [currentRange.begin, currentRange.end, currentRange.label])
 
-  const handleGenerateAiSummary = useCallback(async () => {
-    setFootprintAiStatus('loading')
-    setFootprintAiText('')
-    try {
-      const privateSegments = (data.private_segments.length > 0 ? data.private_segments : data.private_sessions).slice(0, 12)
-      const result = await window.electronAPI.insight.generateFootprintInsight({
-        rangeLabel: currentRange.label,
-        summary: data.summary,
-        privateSegments: privateSegments.map((item: MyFootprintPrivateSegment | MyFootprintPrivateSession) => ({
-          session_id: item.session_id,
-          displayName: item.displayName,
-          incoming_count: item.incoming_count,
-          outgoing_count: item.outgoing_count,
-          message_count: 'message_count' in item ? item.message_count : item.incoming_count + item.outgoing_count,
-          replied: item.replied
-        })),
-        mentionGroups: data.mention_groups.slice(0, 12).map((item) => ({
-          session_id: item.session_id,
-          displayName: item.displayName,
-          count: item.count
-        }))
-      })
-      if (!result.success || !result.insight) {
-        setFootprintAiStatus('error')
-        setFootprintAiText(result.message || '生成失败')
-        return
-      }
-      setFootprintAiStatus('success')
-      setFootprintAiText(result.insight)
-    } catch (generateError) {
-      setFootprintAiStatus('error')
-      setFootprintAiText(String(generateError))
-    }
-  }, [currentRange.label, data])
-
   return (
     <div className="my-footprint-page">
       <section className="footprint-header">
@@ -727,10 +689,6 @@ function MyFootprintPage() {
             <button type="button" className="action-btn" onClick={() => void loadData()} disabled={loading}>
               <RefreshCw size={15} className={loading ? 'spin' : ''} />
               <span>刷新</span>
-            </button>
-            <button type="button" className="action-btn" onClick={() => void handleGenerateAiSummary()} disabled={loading || footprintAiStatus === 'loading'}>
-              {footprintAiStatus === 'loading' ? <Loader2 size={15} className="spin" /> : <Sparkles size={15} />}
-              <span>{footprintAiStatus === 'loading' ? '生成中...' : 'AI 总结'}</span>
             </button>
             <button type="button" className="action-btn" onClick={() => void handleExport('csv')} disabled={exporting || loading}>
               <Download size={15} />
@@ -790,16 +748,6 @@ function MyFootprintPage() {
               <small>按群聚合 @我消息</small>
             </button>
           </section>
-
-          {footprintAiStatus !== 'idle' && (
-            <section className={`footprint-ai-result footprint-ai-result-${footprintAiStatus}`}>
-              <div className="footprint-ai-head">
-                <strong>AI 足迹总结</strong>
-                <span>{currentRange.label}</span>
-              </div>
-              <p>{footprintAiText}</p>
-            </section>
-          )}
 
           <section
             className={`footprint-timeline timeline-time-${timelineTimeMode}`}

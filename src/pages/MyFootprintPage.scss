@@ -257,42 +257,6 @@
   display: none; /* Minimalistic, hide icon in KPI */
 }
 
-.footprint-ai-result {
-  border-radius: 8px;
-  padding: 14px 16px;
-  background: color-mix(in srgb, var(--text-tertiary) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border-color) 40%, transparent);
-
-  .footprint-ai-head {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 8px;
-
-    strong {
-      font-size: 14px;
-      color: var(--text-primary);
-    }
-
-    span {
-      font-size: 12px;
-      color: var(--text-tertiary);
-    }
-  }
-
-  p {
-    margin: 0;
-    white-space: pre-wrap;
-    line-height: 1.6;
-    color: var(--text-secondary);
-    font-size: 13px;
-  }
-
-  &.footprint-ai-result-error {
-    border-color: color-mix(in srgb, #ef4444 50%, transparent);
-  }
-}
-
 .kpi-label {
   font-size: 13px;
   font-weight: 500;

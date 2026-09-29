@@ -63,8 +63,7 @@
   background: radial-gradient(circle at center, #1c1c1e 0%, #151516 100%); /* 调配深邃且柔和的黑金底色过渡 */
 }
 
-.export-keepalive-page,
-.agent-keepalive-page {
+.export-keepalive-page {
   height: 100%;
 
   &.hidden {
@@ -72,8 +71,7 @@
   }
 }
 
-.export-route-anchor,
-.agent-route-anchor {
+.export-route-anchor {
   display: none;
 }
 
