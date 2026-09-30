@@ -11,7 +11,6 @@ export interface SystemNotificationData {
   content: string;
   avatarUrl?: string;
   channel?: string;
-  insightRecordId?: string;
   targetRoute?: string;
   expireTimeout?: number;
 }
@@ -79,11 +78,10 @@ export async function showSystemNotification(
     activeNotifications.set(notificationId, notification);
 
     notification.on("click", () => {
-      if (data.channel === "ai-insight" && data.insightRecordId) {
+      if (data.targetRoute) {
         triggerNotificationCallback({
           sessionId: data.sessionId,
           channel: data.channel,
-          insightRecordId: data.insightRecordId,
           targetRoute: data.targetRoute,
         });
         return;

@@ -9,7 +9,6 @@ export interface NotificationData {
     id: string
     sessionId: string
     channel?: string
-    insightRecordId?: string
     targetRoute?: string
     avatarUrl?: string
     title: string

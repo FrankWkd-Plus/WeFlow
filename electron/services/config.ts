@@ -84,7 +84,6 @@ interface ConfigSchema {
 
   // 通知
   notificationEnabled: boolean
-  aiInsightNotificationEnabled: boolean
   notificationPosition: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'top-center'
   notificationFilterMode: 'all' | 'whitelist' | 'blacklist'
   notificationFilterList: string[]
@@ -101,61 +100,6 @@ interface ConfigSchema {
   exportWriteLayout: 'A' | 'B' | 'C'
   exportAutomationTaskMap: Record<string, unknown>
 
-  // AI 见解
-  aiModelApiBaseUrl: string
-  aiModelApiKey: string
-  aiModelApiModel: string
-  aiModelApiMaxTokens: number
-  aiModelProfilesJson: string
-  activeAiModelProfileId: string
-  relayOneSessionJson: string
-  agentDebugLogEnabled: boolean
-  aiRelationshipJourneyAdjudicationEnabled: boolean
-  aiInsightEnabled: boolean
-  aiInsightApiBaseUrl: string
-  aiInsightApiKey: string
-  aiInsightApiModel: string
-  aiInsightSilenceDays: number
-  aiInsightAllowContext: boolean
-  aiInsightAllowMomentsContext: boolean
-  aiInsightMomentsContextCount: number
-  aiInsightMomentsBindings: Record<string, { enabled: boolean; updatedAt: number }>
-  aiInsightAllowSocialContext: boolean
-  aiInsightSocialContextCount: number
-  aiInsightWeiboCookie: string
-  aiInsightWeiboBindings: Record<string, { uid: string; screenName?: string; updatedAt: number }>
-  aiInsightFilterMode: 'whitelist' | 'blacklist'
-  aiInsightFilterList: string[]
-  aiInsightWhitelistEnabled: boolean
-  aiInsightWhitelist: string[]
-  /** 活跃分析冷却时间（分钟），0 表示无冷却 */
-  aiInsightCooldownMinutes: number
-  /** 沉默联系人扫描间隔（小时） */
-  aiInsightScanIntervalHours: number
-  /** 发送上下文时的最大消息条数 */
-  aiInsightContextCount: number
-  /** 自定义 system prompt，空字符串表示使用内置默认值 */
-  aiInsightSystemPrompt: string
-  /** 是否启用 Telegram 推送 */
-  aiInsightTelegramEnabled: boolean
-  /** Telegram Bot Token */
-  aiInsightTelegramToken: string
-  /** Telegram 接收 Chat ID，逗号分隔，支持多个 */
-  aiInsightTelegramChatIds: string
-
-  // AI 足迹
-  aiFootprintEnabled: boolean
-  aiFootprintSystemPrompt: string
-  aiGroupSummaryEnabled: boolean
-  aiGroupSummaryIntervalHours: number
-  aiGroupSummarySystemPrompt: string
-  aiGroupSummaryFilterMode: 'whitelist' | 'blacklist'
-  aiGroupSummaryFilterList: string[]
-  aiMessageInsightEnabled: boolean
-  aiMessageInsightContextCount: number
-  aiMessageInsightSystemPrompt: string
-  /** 是否将 AI 见解调试日志输出到桌面 */
-  aiInsightDebugLogEnabled: boolean
   autoDownloadHighRes: boolean
   autoDownloadWhitelist: string[]
 }
@@ -165,18 +109,13 @@ const ENCRYPTED_STRING_KEYS: Set<string> = new Set([
   'decryptKey',
   'imageAesKey',
   'authPassword',
-  'httpApiToken',
-  'aiModelApiKey',
-  'aiModelProfilesJson',
-  'relayOneSessionJson',
-  'aiInsightApiKey',
-  'aiInsightWeiboCookie'
+  'httpApiToken'
 ])
 const ENCRYPTED_BOOL_KEYS: Set<string> = new Set(['authEnabled', 'authUseHello'])
 const ENCRYPTED_NUMBER_KEYS: Set<string> = new Set(['imageXorKey'])
 
 // 需要与密码绑定的敏感密钥字段（锁定模式时用 lock: 加密）
-const LOCKABLE_STRING_KEYS: Set<string> = new Set(['decryptKey', 'imageAesKey', 'aiModelApiKey', 'aiModelProfilesJson'])
+const LOCKABLE_STRING_KEYS: Set<string> = new Set(['decryptKey', 'imageAesKey'])
 const LOCKABLE_NUMBER_KEYS: Set<string> = new Set(['imageXorKey'])
 
 /**
@@ -251,7 +190,6 @@ export class ConfigService {
       ignoredUpdateVersion: '',
       updateChannel: 'auto',
       notificationEnabled: true,
-      aiInsightNotificationEnabled: true,
       notificationPosition: 'top-right',
       notificationFilterMode: 'all',
       notificationFilterList: [],
@@ -267,50 +205,6 @@ export class ConfigService {
       wordCloudExcludeWords: [],
       exportWriteLayout: 'A',
       exportAutomationTaskMap: {},
-      aiModelApiBaseUrl: '',
-      aiModelApiKey: '',
-      aiModelApiModel: 'gpt-4o-mini',
-      aiModelApiMaxTokens: 1024,
-      aiModelProfilesJson: '',
-      activeAiModelProfileId: '',
-      relayOneSessionJson: '',
-      agentDebugLogEnabled: false,
-      aiRelationshipJourneyAdjudicationEnabled: false,
-      aiInsightEnabled: false,
-      aiInsightApiBaseUrl: '',
-      aiInsightApiKey: '',
-      aiInsightApiModel: 'gpt-4o-mini',
-      aiInsightSilenceDays: 3,
-      aiInsightAllowContext: false,
-      aiInsightAllowMomentsContext: false,
-      aiInsightMomentsContextCount: 5,
-      aiInsightMomentsBindings: {},
-      aiInsightAllowSocialContext: false,
-      aiInsightFilterMode: 'whitelist',
-      aiInsightFilterList: [],
-      aiInsightWhitelistEnabled: false,
-      aiInsightWhitelist: [],
-      aiInsightCooldownMinutes: 120,
-      aiInsightScanIntervalHours: 4,
-      aiInsightContextCount: 40,
-      aiInsightSocialContextCount: 3,
-      aiInsightSystemPrompt: '',
-      aiInsightTelegramEnabled: false,
-      aiInsightTelegramToken: '',
-      aiInsightTelegramChatIds: '',
-      aiInsightWeiboCookie: '',
-      aiInsightWeiboBindings: {},
-      aiFootprintEnabled: false,
-      aiFootprintSystemPrompt: '',
-      aiGroupSummaryEnabled: false,
-      aiGroupSummaryIntervalHours: 4,
-      aiGroupSummarySystemPrompt: '',
-      aiGroupSummaryFilterMode: 'whitelist',
-      aiGroupSummaryFilterList: [],
-      aiMessageInsightEnabled: false,
-      aiMessageInsightContextCount: 50,
-      aiMessageInsightSystemPrompt: '',
-      aiInsightDebugLogEnabled: false,
       autoDownloadHighRes: false,
       autoDownloadWhitelist: []
     }
@@ -344,7 +238,6 @@ export class ConfigService {
       }
     }
     this.migrateAuthFields()
-    this.migrateAiConfig()
     if (!runningInWorker) {
       this.cacheMapStore = new CacheMapStore(this.getUserDataPath())
       this.migrateCacheMapKeys()
@@ -374,11 +267,7 @@ export class ConfigService {
 
   isLockMode(): boolean {
     const raw: any = this.store.get('decryptKey')
-    if (typeof raw === 'string' && raw.startsWith(LOCK_PREFIX)) return true
-    const activeAiKey: any = this.store.get('aiModelApiKey')
-    if (typeof activeAiKey === 'string' && activeAiKey.startsWith(LOCK_PREFIX)) return true
-    const profiles: any = this.store.get('aiModelProfilesJson')
-    return typeof profiles === 'string' && profiles.startsWith(LOCK_PREFIX)
+    return typeof raw === 'string' && raw.startsWith(LOCK_PREFIX)
   }
 
   isUnlocked(): boolean {
@@ -549,7 +438,7 @@ export class ConfigService {
   // 通过尝试解密 lock: 字段来验证密码是否正确（当 authPassword 被删除时使用）
   private verifyPasswordByDecrypt(password: string): boolean {
     // 依次尝试解密任意一个 lock: 字段，GCM authTag 会验证密码正确性
-    const lockFields = ['decryptKey', 'imageAesKey', 'imageXorKey', 'aiModelApiKey'] as const
+    const lockFields = ['decryptKey', 'imageAesKey', 'imageXorKey'] as const
     for (const key of lockFields) {
       const raw: any = this.store.get(key as any)
       if (typeof raw === 'string' && raw.startsWith(LOCK_PREFIX)) {
@@ -557,10 +446,6 @@ export class ConfigService {
         // lockDecrypt 返回 null 表示解密失败（密码错误），非 null 表示成功
         return result !== null
       }
-    }
-    const rawProfiles: any = this.store.get('aiModelProfilesJson')
-    if (typeof rawProfiles === 'string' && rawProfiles.startsWith(LOCK_PREFIX)) {
-      return this.lockDecrypt(rawProfiles, password) !== null
     }
     return false
   }
@@ -653,8 +538,6 @@ export class ConfigService {
       const imageAesKey = this.get('imageAesKey')
       const imageXorKey = this.get('imageXorKey')
       const accountConfigs = this.get('accountConfigs')
-      const aiModelApiKey = this.get('aiModelApiKey')
-      const aiModelProfilesJson = this.get('aiModelProfilesJson')
 
       // 存储密码 hash（safeStorage 加密）
       const passwordHash = crypto.createHash('sha256').update(password).digest('hex')
@@ -666,15 +549,11 @@ export class ConfigService {
       this.unlockedKeys.set('decryptKey', decryptKey)
       this.unlockedKeys.set('imageAesKey', imageAesKey)
       this.unlockedKeys.set('imageXorKey', imageXorKey)
-      this.unlockedKeys.set('aiModelApiKey', aiModelApiKey)
-      this.unlockedKeys.set('aiModelProfilesJson', aiModelProfilesJson)
 
       // 用密码派生密钥重新加密所有敏感字段
       if (decryptKey) this.store.set('decryptKey', this.lockEncrypt(String(decryptKey), password) as any)
       if (imageAesKey) this.store.set('imageAesKey', this.lockEncrypt(String(imageAesKey), password) as any)
       if (imageXorKey !== undefined) this.store.set('imageXorKey', this.lockEncrypt(String(imageXorKey), password) as any)
-      if (aiModelApiKey) this.store.set('aiModelApiKey', this.lockEncrypt(String(aiModelApiKey), password) as any)
-      if (aiModelProfilesJson) this.store.set('aiModelProfilesJson', this.lockEncrypt(String(aiModelProfilesJson), password) as any)
 
       // 处理 accountConfigs 中的嵌套密钥
       if (accountConfigs && Object.keys(accountConfigs).length > 0) {
@@ -735,18 +614,6 @@ export class ConfigService {
         if (d !== null) this.unlockedKeys.set('imageXorKey', Number(d))
       }
 
-      const rawProfiles: any = this.store.get('aiModelProfilesJson')
-      if (typeof rawProfiles === 'string' && rawProfiles.startsWith(LOCK_PREFIX)) {
-        const decrypted = this.lockDecrypt(rawProfiles, password)
-        if (decrypted !== null) this.unlockedKeys.set('aiModelProfilesJson', decrypted)
-      }
-
-      const rawAiModelApiKey: any = this.store.get('aiModelApiKey')
-      if (typeof rawAiModelApiKey === 'string' && rawAiModelApiKey.startsWith(LOCK_PREFIX)) {
-        const decrypted = this.lockDecrypt(rawAiModelApiKey, password)
-        if (decrypted !== null) this.unlockedKeys.set('aiModelApiKey', decrypted)
-      }
-
       // 解密 accountConfigs 嵌套密钥
       this.decryptLockedAccountConfigs(password)
 
@@ -776,14 +643,10 @@ export class ConfigService {
       const decryptKey = this.unlockedKeys.get('decryptKey')
       const imageAesKey = this.unlockedKeys.get('imageAesKey')
       const imageXorKey = this.unlockedKeys.get('imageXorKey')
-      const aiModelApiKey = this.unlockedKeys.get('aiModelApiKey')
-      const aiModelProfilesJson = this.unlockedKeys.get('aiModelProfilesJson')
 
       if (decryptKey) this.store.set('decryptKey', this.safeEncrypt(String(decryptKey)) as any)
       if (imageAesKey) this.store.set('imageAesKey', this.safeEncrypt(String(imageAesKey)) as any)
       if (imageXorKey !== undefined) this.store.set('imageXorKey', this.safeEncrypt(String(imageXorKey)) as any)
-      if (aiModelApiKey) this.store.set('aiModelApiKey', this.safeEncrypt(String(aiModelApiKey)) as any)
-      if (aiModelProfilesJson) this.store.set('aiModelProfilesJson', this.safeEncrypt(String(aiModelProfilesJson)) as any)
 
       // 转换 accountConfigs
       const accountConfigs = this.get('accountConfigs')
@@ -826,14 +689,10 @@ export class ConfigService {
       const decryptKey = this.unlockedKeys.get('decryptKey')
       const imageAesKey = this.unlockedKeys.get('imageAesKey')
       const imageXorKey = this.unlockedKeys.get('imageXorKey')
-      const aiModelApiKey = this.unlockedKeys.get('aiModelApiKey')
-      const aiModelProfilesJson = this.unlockedKeys.get('aiModelProfilesJson')
 
       if (decryptKey) this.store.set('decryptKey', this.lockEncrypt(String(decryptKey), newPassword) as any)
       if (imageAesKey) this.store.set('imageAesKey', this.lockEncrypt(String(imageAesKey), newPassword) as any)
       if (imageXorKey !== undefined) this.store.set('imageXorKey', this.lockEncrypt(String(imageXorKey), newPassword) as any)
-      if (aiModelApiKey) this.store.set('aiModelApiKey', this.lockEncrypt(String(aiModelApiKey), newPassword) as any)
-      if (aiModelProfilesJson) this.store.set('aiModelProfilesJson', this.lockEncrypt(String(aiModelProfilesJson), newPassword) as any)
 
       // 重新加密 accountConfigs
       const accountConfigs = this.get('accountConfigs')
@@ -941,46 +800,6 @@ export class ConfigService {
     }
   }
 
-  private migrateAiConfig(): void {
-    const migrationKey = 'aiModelConfigNamespaceMigrationV2'
-    if (this.store.get(migrationKey as any) !== true) {
-      // Only migrate when the shared namespace has never been explicitly stored.
-      // An explicitly empty shared key means the user disabled AI and must not be
-      // silently repopulated from retired credentials on a later startup.
-      const sharedBaseUrl = String(this.get('aiModelApiBaseUrl') || '').trim()
-      const sharedApiKey = String(this.get('aiModelApiKey') || '').trim()
-
-      const legacyBaseUrl = String(this.get('aiInsightApiBaseUrl') || '').trim()
-      const legacyApiKey = String(this.get('aiInsightApiKey') || '').trim()
-      const legacyModel = String(this.get('aiInsightApiModel') || '').trim()
-
-      // Conf materializes defaults into the backing store, so store.has() cannot
-      // distinguish an untouched default from an explicit edit. The migration
-      // marker is the one-time boundary; before it exists, migrate only a complete
-      // empty shared credential pair as one unit (never field-by-field).
-      const migrationPatch: Record<string, unknown> = {
-        aiInsightApiBaseUrl: '',
-        aiInsightApiKey: '',
-        aiInsightApiModel: '',
-        [migrationKey]: true
-      }
-      if (!sharedBaseUrl && !sharedApiKey && legacyBaseUrl && legacyApiKey) {
-        migrationPatch.aiModelApiBaseUrl = legacyBaseUrl
-        migrationPatch.aiModelApiKey = this.safeEncrypt(legacyApiKey)
-        migrationPatch.aiModelApiModel = legacyModel || 'gpt-4o-mini'
-      }
-
-      // One backing-store write makes the triple migration and retirement a
-      // single crash-safe namespace transition.
-      this.store.set(migrationPatch as any)
-    }
-
-    const groupSummaryFilterMode = String(this.store.get('aiGroupSummaryFilterMode' as any) || '').trim()
-    if (groupSummaryFilterMode === 'blacklist') {
-      this.store.set('aiGroupSummaryFilterList' as any, [] as any)
-      this.store.set('aiGroupSummaryFilterMode' as any, 'whitelist' as any)
-    }
-  }
 
   // === 验证 ===
 
@@ -993,13 +812,7 @@ export class ConfigService {
 
     // 即使 authEnabled 被删除/篡改，如果密钥是 lock: 格式，说明曾开启过应用锁
     const rawDecryptKey: any = this.store.get('decryptKey')
-    if (typeof rawDecryptKey === 'string' && rawDecryptKey.startsWith(LOCK_PREFIX)) return true
-    const rawAiModelApiKey: any = this.store.get('aiModelApiKey')
-    if (typeof rawAiModelApiKey === 'string' && rawAiModelApiKey.startsWith(LOCK_PREFIX)) return true
-    const rawProfiles: any = this.store.get('aiModelProfilesJson')
-    return typeof rawProfiles === 'string' && rawProfiles.startsWith(LOCK_PREFIX)
-
-
+    return typeof rawDecryptKey === 'string' && rawDecryptKey.startsWith(LOCK_PREFIX)
   }
 
   // === 工具方法 ===

@@ -17,7 +17,6 @@ import { SessionStatsCacheService, SessionStatsCacheEntry, SessionStatsCacheStat
 import { FILE_APP_LOCAL_TYPE_SET } from './export/constants'
 import { GroupMyMessageCountCacheService, GroupMyMessageCountCacheEntry } from './groupMyMessageCountCacheService'
 import { RelationshipJourneyCacheService } from './relationshipJourneyCacheService'
-import { RelationshipJourneyAdjudicationService } from './relationshipJourneyAdjudicationService'
 import { exportCardDiagnosticsService } from './exportCardDiagnosticsService'
 import { voiceTranscribeService } from './voiceTranscribeService'
 import { imageDecryptService, type ImageDecryptService } from './imageDecryptService'
@@ -213,6 +212,8 @@ const BUILTIN_OFFICIAL_HELPER_USERNAMES = new Set([
   'gh_f0a92aa7146c' // 收款助手不出现在通讯录的公众号/服务号分组里
 ])
 const CONTACT_CLASSIFICATION_CACHE_VERSION = 'contact-classification-v5'
+// 关系旅程已改为纯本地分析，缓存指纹不再随 AI 模型配置变化。
+const RELATIONSHIP_JOURNEY_MODEL_FINGERPRINT = 'local-only'
 
 interface GetContactsOptions {
   lite?: boolean
@@ -438,7 +439,6 @@ class ChatService {
   private readonly sessionStatsCacheService: SessionStatsCacheService
   private readonly groupMyMessageCountCacheService: GroupMyMessageCountCacheService
   private readonly relationshipJourneyCacheService: RelationshipJourneyCacheService
-  private readonly relationshipJourneyAdjudicationService: RelationshipJourneyAdjudicationService
   private readonly imageDecryptService: ImageDecryptService
   private voiceWavCache: LRUCache<string, Buffer>
   private voiceTranscriptCache: LRUCache<string, string>
@@ -566,10 +566,6 @@ class ChatService {
     this.sessionStatsCacheService = new SessionStatsCacheService(this.configService.getCacheBasePath())
     this.groupMyMessageCountCacheService = new GroupMyMessageCountCacheService(this.configService.getCacheBasePath())
     this.relationshipJourneyCacheService = new RelationshipJourneyCacheService(this.configService.getCacheBasePath())
-    this.relationshipJourneyAdjudicationService = new RelationshipJourneyAdjudicationService(
-      this.configService,
-      this.relationshipJourneyCacheService
-    )
     this.imageDecryptService = imageDecryptService
     // 初始化LRU缓存，限制大小防止内存泄漏
     this.voiceWavCache = new LRUCache(this.voiceWavCacheMaxEntries)
@@ -11579,12 +11575,11 @@ class ChatService {
       )
     }
     const journeyDataEpoch = this.relationshipJourneyDataEpoch
-    const adjudicationState = this.relationshipJourneyAdjudicationService.getState()
     const pendingKey = [
       this.getCacheAccountScope(),
       normalizedSessionId,
       safeMaxMessages,
-      adjudicationState.modelFingerprint,
+      RELATIONSHIP_JOURNEY_MODEL_FINGERPRINT,
       journeyDataEpoch
     ].join(':')
     const existing = this.relationshipJourneyAnalysisPending.get(pendingKey)
@@ -11790,7 +11785,6 @@ class ChatService {
       return { success: false, error: '账号已切换，已丢弃过期旅程分析' }
     }
     const cacheSessionKey = this.getRelationshipJourneyCacheSessionKey(normalizedSessionId)
-    const adjudicationState = this.relationshipJourneyAdjudicationService.getState()
 
     let resumeResult: RelationshipJourneyScanResult | undefined
     if (!forceRefresh) {
@@ -11799,7 +11793,7 @@ class ChatService {
         cacheSessionKey,
         {
           algorithmVersion: RELATIONSHIP_JOURNEY_ALGORITHM_VERSION,
-          modelFingerprint: adjudicationState.modelFingerprint
+          modelFingerprint: RELATIONSHIP_JOURNEY_MODEL_FINGERPRINT
         }
       )
       if (
@@ -11935,33 +11929,12 @@ class ChatService {
         maxMessages,
         cacheKey: sourceFingerprint || `${cacheSessionKey}:${journeyDataEpoch}`,
         forceRefresh,
-        resumeResult,
-        adjudicateConflictCandidates: adjudicationState.status === 'disabled'
-          ? undefined
-          : async (candidates) => {
-            // Message scanning is complete before semantic review starts. Release
-            // the existing cursor before a potentially slow provider request.
-            await closeCursor()
-            if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
-            return this.relationshipJourneyAdjudicationService.adjudicateCandidates(candidates, {
-              accountScope,
-              forceRefresh,
-              cacheEpoch: journeyDataEpoch,
-              canPersist: () => !signal.aborted && this.isRelationshipJourneyContextCurrent(
-                accountScope,
-                accountCacheEpoch,
-                journeyDataEpoch
-              )
-            })
-          }
+        resumeResult
       })
 
       if (signal.aborted) return cancelledResult()
       if (!this.isRelationshipJourneyContextCurrent(accountScope, accountCacheEpoch, journeyDataEpoch)) {
         return { success: false, error: '账号已切换，已丢弃过期旅程分析' }
-      }
-      if (this.relationshipJourneyAdjudicationService.getState().modelFingerprint !== adjudicationState.modelFingerprint) {
-        return { success: false, error: 'AI 配置在旅程分析期间发生变化，请重试' }
       }
 
       const latestSourceState = await this.getRelationshipJourneySourceState(
@@ -11990,7 +11963,7 @@ class ChatService {
         this.relationshipJourneyCacheService.setFullAnalysis(accountScope, cacheSessionKey, {
           fingerprint: sourceFingerprint,
           algorithmVersion: RELATIONSHIP_JOURNEY_ALGORITHM_VERSION,
-          modelFingerprint: adjudicationState.modelFingerprint,
+          modelFingerprint: RELATIONSHIP_JOURNEY_MODEL_FINGERPRINT,
           result: data,
           updatedAt: Date.now()
         })
