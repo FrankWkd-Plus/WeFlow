@@ -8,9 +8,18 @@ on:
 permissions:
   contents: write
 
+# 同一个 tag 的发布只允许一条流水线在跑。四个平台的构建 job 都会往同一个
+# GitHub Release 上传产物，并发运行会互相覆盖（各 job 都用 --clobber）。
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   ELECTRON_BUILDER_BINARIES_MIRROR: https://github.com/electron-userland/electron-builder-binaries/releases/download/
+  # 自动更新器的最低可升级版本，写入各平台的 latest*.yml。
+  # 此前在 4 个 job 里各写一份，改一处漏三处。
+  MINIMUM_VERSION: "4.1.7"
 
 jobs:
   prepare-release:
@@ -59,7 +68,7 @@ jobs:
       - name: Build Frontend & Type Check
         shell: bash
         run: |
-          npx tsc
+          npm run typecheck
           npx vite build
 
       - name: Package and Publish macOS arm64 (unsigned DMG + ZIP)
@@ -85,7 +94,6 @@ jobs:
           source .github/scripts/release-utils.sh
           TAG=${GITHUB_REF_NAME}
           REPO=${{ github.repository }}
-          MINIMUM_VERSION="4.1.7"
           wait_for_release_id "$REPO" "$TAG" 12 2 >/dev/null
           upload_generated_release_files "$REPO" "$TAG"
           upload_generated_update_ymls "$REPO" "$TAG" "$MINIMUM_VERSION" latest-mac.yml latest-arm64-mac.yml
@@ -118,7 +126,7 @@ jobs:
       - name: Build Frontend & Type Check
         shell: bash
         run: |
-          npx tsc
+          npm run typecheck
           npx vite build
 
       - name: Package and Publish Linux
@@ -136,7 +144,6 @@ jobs:
           source .github/scripts/release-utils.sh
           TAG=${GITHUB_REF_NAME}
           REPO=${{ github.repository }}
-          MINIMUM_VERSION="4.1.7"
           wait_for_release_id "$REPO" "$TAG" 12 2 >/dev/null
           upload_generated_release_files "$REPO" "$TAG"
           upload_generated_update_ymls "$REPO" "$TAG" "$MINIMUM_VERSION" latest-linux.yml
@@ -169,7 +176,7 @@ jobs:
       - name: Build Frontend & Type Check
         shell: bash
         run: |
-          npx tsc
+          npm run typecheck
           npx vite build
 
       - name: Package and Publish
@@ -187,7 +194,6 @@ jobs:
           source .github/scripts/release-utils.sh
           TAG=${GITHUB_REF_NAME}
           REPO=${{ github.repository }}
-          MINIMUM_VERSION="4.1.7"
           wait_for_release_id "$REPO" "$TAG" 12 2 >/dev/null
           upload_generated_release_files "$REPO" "$TAG"
           upload_generated_update_ymls "$REPO" "$TAG" "$MINIMUM_VERSION" latest.yml
@@ -220,7 +226,7 @@ jobs:
       - name: Build Frontend & Type Check
         shell: bash
         run: |
-          npx tsc
+          npm run typecheck
           npx vite build
 
       - name: Package and Publish Windows arm64
@@ -238,7 +244,6 @@ jobs:
           source .github/scripts/release-utils.sh
           TAG=${GITHUB_REF_NAME}
           REPO=${{ github.repository }}
-          MINIMUM_VERSION="4.1.7"
           wait_for_release_id "$REPO" "$TAG" 12 2 >/dev/null
           upload_generated_release_files "$REPO" "$TAG"
           upload_generated_update_ymls "$REPO" "$TAG" "$MINIMUM_VERSION" latest-arm64.yml

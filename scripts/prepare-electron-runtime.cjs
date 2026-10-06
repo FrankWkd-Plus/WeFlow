@@ -48,10 +48,21 @@ function main() {
   }
 
   const projectRoot = path.resolve(__dirname, '..');
-  const sourceDir = path.join(projectRoot, 'resources', 'runtime', 'win32');
+  // Runtime DLLs are architecture-specific: an arm64 host must never load the
+  // x64 vcruntime140.dll from next to its executable, which fails with
+  // ERROR_BAD_EXE_FORMAT. Keep them in per-arch directories and stay silent
+  // when the current arch has no DLLs to offer (matches the `${arch}` macro
+  // used for the packaged win.extraFiles).
+  const archDirName = `win32-${process.arch}`;
+  const sourceDir = path.join(projectRoot, 'resources', 'runtime', archDirName);
   const targetDir = path.join(projectRoot, 'node_modules', 'electron', 'dist');
 
-  if (!fs.existsSync(sourceDir) || !fs.existsSync(targetDir)) {
+  if (!fs.existsSync(sourceDir)) {
+    console.log(`[prepare-electron-runtime] no resources/runtime/${archDirName}, skipping`);
+    return;
+  }
+
+  if (!fs.existsSync(targetDir)) {
     return;
   }
 

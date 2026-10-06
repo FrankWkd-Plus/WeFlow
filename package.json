@@ -109,19 +109,19 @@
       "icon": "public/icon.ico",
       "extraFiles": [
         {
-          "from": "resources/runtime/win32/msvcp140.dll",
+          "from": "resources/runtime/win32-${arch}/msvcp140.dll",
           "to": "."
         },
         {
-          "from": "resources/runtime/win32/msvcp140_1.dll",
+          "from": "resources/runtime/win32-${arch}/msvcp140_1.dll",
           "to": "."
         },
         {
-          "from": "resources/runtime/win32/vcruntime140.dll",
+          "from": "resources/runtime/win32-${arch}/vcruntime140.dll",
           "to": "."
         },
         {
-          "from": "resources/runtime/win32/vcruntime140_1.dll",
+          "from": "resources/runtime/win32-${arch}/vcruntime140_1.dll",
           "to": "."
         }
       ]
@@ -168,7 +168,8 @@
         "from": "resources/",
         "to": "resources/",
         "filter": [
-          "**/*"
+          "**/*",
+          "!runtime{,/**/*}"
         ]
       },
       {
