@@ -18,14 +18,12 @@ import LockScreen from './components/LockScreen'
 import { GlobalSessionMonitor } from './components/GlobalSessionMonitor'
 import WindowCloseDialog from './components/WindowCloseDialog'
 import { resolveAutomationScopeKey } from './pages/Export/hooks/useAutomation'
-import { loadAgentPage } from './pages/agent/loadAgentPage'
 
 // 全部页面懒加载：主窗口首屏只解析 App 壳 + HomePage；
 // 常驻的通知窗口等独立窗口路由也因此只加载各自的小 chunk，
 // 显著降低每个渲染进程的 JS 堆占用与启动时间
 const WelcomePage = lazy(() => import('./pages/WelcomePage'))
 const ChatPage = lazy(() => import('./pages/ChatPage'))
-const AgentPage = lazy(loadAgentPage)
 const AnalyticsWelcomePage = lazy(() => import('./pages/AnalyticsWelcomePage'))
 const ChatAnalyticsHubPage = lazy(() => import('./pages/ChatAnalyticsHubPage'))
 const AgreementPage = lazy(() => import('./pages/AgreementPage'))
@@ -41,7 +39,6 @@ const ChatHistoryPage = lazy(() => import('./pages/ChatHistoryPage'))
 const NotificationWindow = lazy(() => import('./pages/NotificationWindow'))
 const AccountManagementPage = lazy(() => import('./pages/AccountManagementPage'))
 const BackupPage = lazy(() => import('./pages/BackupPage'))
-const InsightInboxPage = lazy(() => import('./pages/InsightInboxPage'))
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 const GroupAnalyticsPage = lazy(() => import('./pages/GroupAnalyticsPage'))
 const AnnualReportPage = lazy(() => import('./pages/AnnualReportPage'))
@@ -55,17 +52,6 @@ function RouteStateRedirect({ to }: { to: string }) {
   const location = useLocation()
 
   return <Navigate to={to} replace state={location.state} />
-}
-
-function LegacyAiRedirect() {
-  const location = useLocation()
-  const legacyPrefix = location.pathname.startsWith('/chat/deep/')
-    ? '/chat/deep/'
-    : location.pathname.startsWith('/deep-chat/') ? '/deep-chat/' : ''
-  const encodedSessionId = legacyPrefix ? location.pathname.slice(legacyPrefix.length) : ''
-  const destination = `${encodedSessionId ? `/ai/${encodedSessionId}` : '/ai'}${location.search}${location.hash}`
-
-  return <Navigate to={destination} replace state={location.state} />
 }
 
 function App() {
@@ -109,15 +95,8 @@ function App() {
     ? settingsRouteState?.backgroundLocation ?? settingsBackgroundRef.current
     : location
   const isExportRoute = routeLocation.pathname === '/export'
-  const isAgentRoute = routeLocation.pathname === '/ai' || routeLocation.pathname.startsWith('/ai/')
-  const currentAgentRoute = {
-    sessionId: routeLocation.pathname.startsWith('/ai/') ? routeLocation.pathname.slice('/ai/'.length) : '',
-    state: routeLocation.state as { displayName?: string; avatarUrl?: string } | null,
-  }
   // Export 模块按需挂载：首次进入导出页，或存在启用的自动化任务（调度器在导出页内）时才挂载
   const [exportMounted, setExportMounted] = useState(false)
-  const [agentMounted, setAgentMounted] = useState(isAgentRoute)
-  const [agentRoute, setAgentRoute] = useState(currentAgentRoute)
   const [themeHydrated, setThemeHydrated] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [showCloseDialog, setShowCloseDialog] = useState(false)
@@ -154,14 +133,6 @@ function App() {
   useEffect(() => {
     if (isExportRoute && !exportMounted) setExportMounted(true)
   }, [isExportRoute, exportMounted])
-
-  useEffect(() => {
-    if (!isAgentRoute) return
-    if (!agentMounted) setAgentMounted(true)
-    setAgentRoute(currentAgentRoute)
-    // currentAgentRoute is intentionally derived from the active route.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [agentMounted, isAgentRoute, routeLocation.pathname, routeLocation.state])
 
   // 存在启用的自动化导出任务时，即使未访问导出页也需挂载（30s 调度器运行在导出页内）
   useEffect(() => {
@@ -793,26 +764,11 @@ function App() {
       <div className="main-layout">
         <Sidebar collapsed={sidebarCollapsed} />
         <main className={`content ${
-          routeLocation.pathname.startsWith('/ai') ||
-          routeLocation.pathname.startsWith('/deep-chat') ||
           routeLocation.pathname.startsWith('/relationship-achievements')
             ? 'content-edge-to-edge'
             : ''
         }`}>
           <RouteGuard>
-            {/* Agent 首次打开后保持挂载，页面切换时继续流式回答、工具调用与会话持久化。 */}
-            {agentMounted && (
-              <Suspense fallback={isAgentRoute ? <div className="route-loading" role="status" aria-live="polite"><span /><small>正在打开 AI 聊天…</small></div> : null}>
-                <div className={`agent-keepalive-page ${isAgentRoute ? 'active' : 'hidden'}`} aria-hidden={!isAgentRoute}>
-                  <AgentPage
-                    active={isAgentRoute}
-                    routeSessionId={agentRoute.sessionId}
-                    routeState={agentRoute.state}
-                  />
-                </div>
-              </Suspense>
-            )}
-
             {/* Export 模块按需挂载（首次访问或有自动化任务时），挂载后 keepalive 保持任务/调度状态 */}
             {exportMounted && (
               <Suspense fallback={null}>
@@ -828,11 +784,6 @@ function App() {
                 <Route path="/home" element={<HomePage />} />
                 <Route path="/account-management" element={<AccountManagementPage />} />
                 <Route path="/chat" element={<ChatPage />} />
-                <Route path="/chat/deep/:sessionId" element={<LegacyAiRedirect />} />
-                <Route path="/deep-chat" element={<LegacyAiRedirect />} />
-                <Route path="/deep-chat/:sessionId" element={<LegacyAiRedirect />} />
-                <Route path="/ai" element={<div className="agent-route-anchor" aria-hidden="true" />} />
-                <Route path="/ai/:sessionId" element={<div className="agent-route-anchor" aria-hidden="true" />} />
 
                 <Route path="/analytics" element={<ChatAnalyticsHubPage />} />
                 <Route path="/analytics/private" element={<AnalyticsWelcomePage />} />
@@ -849,7 +800,6 @@ function App() {
 
                 <Route path="/export" element={<div className="export-route-anchor" aria-hidden="true" />} />
                 <Route path="/sns" element={<SnsPage />} />
-                <Route path="/insight-inbox" element={<InsightInboxPage />} />
                 <Route path="/biz" element={<BizPage />} />
                 <Route path="/contacts" element={<ContactsPage />} />
                 <Route path="/resources" element={<ResourcesPage />} />

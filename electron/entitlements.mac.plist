@@ -2,10 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>com.apple.security.cs.debugger</key>
-    <true/>
-    <key>com.apple.security.get-task-allow</key>
-    <true/>
+    <!-- 保留：应用需要以 koffi / require() 加载用户自行配置的第三方原生组件
+         （WCDB 动态库、媒体解密 .node），它们没有 Apple 签名，也不参与
+         hardened runtime 的库校验。去掉这两项会导致插件加载被系统拒绝。 -->
     <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
     <true/>
     <key>com.apple.security.cs.disable-library-validation</key>

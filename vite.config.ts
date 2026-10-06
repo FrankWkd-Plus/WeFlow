@@ -2,8 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import electron from 'vite-plugin-electron'
-import { copyFileSync, mkdirSync } from 'fs'
-import { dirname, resolve } from 'path'
+import { resolve } from 'path'
 
 let electronReloadTimer: ReturnType<typeof setTimeout> | undefined
 const handleElectronOnStart = (options: { reload: () => void }) => {
@@ -126,19 +125,6 @@ const exportWorkerElectronShimPlugin = () => {
   }
 }
 
-const copyJiebaNodeWasmPlugin = () => ({
-  name: 'weflow-copy-jieba-node-wasm',
-  writeBundle(options: { dir?: string; file?: string }) {
-    const outputDir = options.dir || (options.file ? dirname(options.file) : '')
-    if (!outputDir) return
-    mkdirSync(outputDir, { recursive: true })
-    copyFileSync(
-      resolve(process.cwd(), 'node_modules/jieba-wasm/pkg/nodejs/jieba_rs_wasm_bg.wasm'),
-      resolve(outputDir, 'jieba_rs_wasm_bg.wasm'),
-    )
-  },
-})
-
 export default defineConfig({
   base: './',
   server: {
@@ -170,7 +156,6 @@ export default defineConfig({
         entry: 'electron/main.ts',
         onstart: handleElectronMainOnStart,
         vite: {
-          plugins: [copyJiebaNodeWasmPlugin()],
           build: {
             outDir: 'dist-electron',
             rollupOptions: {
@@ -328,51 +313,6 @@ export default defineConfig({
             rollupOptions: {
               output: {
                 entryFileNames: 'apiMessageWorker.js',
-                codeSplitting: false
-              }
-            }
-          }
-        }
-      },
-      {
-        entry: 'electron/agentRunWorker.ts',
-        onstart: handleElectronOnStart,
-        vite: {
-          plugins: [exportWorkerElectronShimPlugin(), copyJiebaNodeWasmPlugin()],
-          build: {
-            outDir: 'dist-electron',
-            rollupOptions: {
-              external: [
-                'better-sqlite3',
-                'koffi',
-                'fsevents',
-                'whisper-node',
-                'sherpa-onnx-node',
-                'shelljs',
-                'exceljs',
-                'node-llama-cpp',
-                '@vscode/sudo-prompt',
-                'silk-wasm',
-                '@hicccc77/electron-liquid-glass'
-              ],
-              output: {
-                entryFileNames: 'agentRunWorker.js',
-                codeSplitting: false
-              }
-            }
-          }
-        }
-      },
-      {
-        entry: 'electron/agentTitleWorker.ts',
-        onstart: handleElectronOnStart,
-        vite: {
-          plugins: [exportWorkerElectronShimPlugin()],
-          build: {
-            outDir: 'dist-electron',
-            rollupOptions: {
-              output: {
-                entryFileNames: 'agentTitleWorker.js',
                 codeSplitting: false
               }
             }

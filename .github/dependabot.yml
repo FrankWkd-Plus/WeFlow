@@ -1,7 +1,15 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
-    directory: "/"                
+    directory: "/"
     schedule:
-      interval: "daily"           
-    target-branch: "dev"          
+      interval: "daily"
+    # 原来这里写的是 target-branch: "dev"，但仓库里没有 dev 分支
+    # （远端只有 main 和功能分支），dependabot 会一直报错、一个 PR 都开不出来。
+    # 默认目标分支是仓库的默认分支，去掉这行即可。
+
+  # Actions 的版本也需要跟着升，否则 checkout/setup-node 这类会一直停在旧大版本。
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

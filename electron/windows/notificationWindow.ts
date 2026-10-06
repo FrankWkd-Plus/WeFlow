@@ -324,13 +324,8 @@ export async function showNotification(data: any) {
   // 先检查配置
   const config = ConfigService.getInstance();
   const sessionId = typeof data.sessionId === "string" ? data.sessionId : "";
-  const channel = typeof data.channel === "string" ? data.channel : "";
-  const isAiInsightNotification = channel === "ai-insight";
 
-  if (isAiInsightNotification) {
-    const enabled = await config.get("aiInsightNotificationEnabled");
-    if (enabled === false) return; // 默认为 true
-  } else {
+  {
     const enabled = await config.get("notificationEnabled");
     if (enabled === false) return; // 默认为 true
 
@@ -398,7 +393,6 @@ async function showViaSystemNotification(data: any) {
     avatarUrl: data.avatarUrl,
     sessionId: data.sessionId,
     channel: data.channel,
-    insightRecordId: data.insightRecordId,
     targetRoute: data.targetRoute,
     expireTimeout: 5000,
   });

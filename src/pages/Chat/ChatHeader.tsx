@@ -2,7 +2,6 @@ import React from 'react'
 import {
   Aperture,
   BarChart3,
-  BrainCircuit,
   Calendar,
   Download,
   Image as ImageIcon,
@@ -10,10 +9,8 @@ import {
   Loader2,
   MessageSquarePlus,
   Mic,
-  Newspaper,
   RefreshCw,
   Search,
-  Sparkles,
   Users
 } from 'lucide-react'
 import { Avatar } from '../../components/Avatar'
@@ -26,14 +23,11 @@ export interface ChatHeaderProps {
   isGroupChat: boolean
   standaloneSessionWindow: boolean
   showGroupMembersPanel: boolean
-  showGroupSummaryPanel: boolean
   showJumpPopover: boolean
   showInSessionSearch: boolean
   showDetailPanel: boolean
-  aiGroupSummaryEnabled: boolean
   shouldHideStandaloneDetailButton: boolean
   isPrivateSnsSupported: boolean
-  isAgentSupported: boolean
   isExportActionBusy: boolean
   isCurrentSessionExporting: boolean
   isPreparingExportDialog: boolean
@@ -42,16 +36,12 @@ export interface ChatHeaderProps {
   batchVoiceProgress?: { current: number; total: number }
   isBatchDecrypting: boolean
   batchImageDecryptProgress?: { current: number; total: number }
-  isTriggeringSessionInsight: boolean
   isInsertingTextMessage: boolean
   isRefreshingMessages: boolean
   isLoadingMessages: boolean
   currentSessionId?: string | null
   jumpCalendarWrapRef: React.RefObject<HTMLDivElement | null>
-  onTriggerSessionInsight: () => void
   onInsertTextMessage: () => void
-  onOpenAgent: () => void
-  onToggleGroupSummaryPanel: () => void
   onGroupAnalytics: () => void
   onToggleGroupMembersPanel: () => void
   onExportCurrentSession: () => void
@@ -69,14 +59,11 @@ function ChatHeader({
   isGroupChat,
   standaloneSessionWindow,
   showGroupMembersPanel,
-  showGroupSummaryPanel,
   showJumpPopover,
   showInSessionSearch,
   showDetailPanel,
-  aiGroupSummaryEnabled,
   shouldHideStandaloneDetailButton,
   isPrivateSnsSupported,
-  isAgentSupported,
   isExportActionBusy,
   isCurrentSessionExporting,
   isPreparingExportDialog,
@@ -85,16 +72,12 @@ function ChatHeader({
   batchVoiceProgress,
   isBatchDecrypting,
   batchImageDecryptProgress,
-  isTriggeringSessionInsight,
   isInsertingTextMessage,
   isRefreshingMessages,
   isLoadingMessages,
   currentSessionId,
   jumpCalendarWrapRef,
-  onTriggerSessionInsight,
   onInsertTextMessage,
-  onOpenAgent,
-  onToggleGroupSummaryPanel,
   onGroupAnalytics,
   onToggleGroupMembersPanel,
   onExportCurrentSession,
@@ -149,37 +132,6 @@ function ChatHeader({
             ? <Loader2 size={18} className="spin" />
             : <MessageSquarePlus size={18} />}
         </button>
-        <button
-          className={`icon-btn session-insight-btn${isTriggeringSessionInsight ? ' triggering' : ''}`}
-          onClick={onTriggerSessionInsight}
-          disabled={!currentSessionId || isTriggeringSessionInsight}
-          title={isTriggeringSessionInsight ? '正在生成 AI 见解' : '立即触发当前聊天 AI 见解'}
-          aria-label="立即触发当前聊天 AI 见解"
-        >
-          {isTriggeringSessionInsight ? <Loader2 size={18} className="spin" /> : <Sparkles size={18} />}
-        </button>
-        {isAgentSupported && (
-          <button
-            className="icon-btn deep-chat-btn"
-            onClick={onOpenAgent}
-            disabled={!currentSessionId}
-            title="在 AI 助手中聊聊这位好友"
-            aria-label="在 AI 助手中打开这位好友"
-          >
-            <BrainCircuit size={18} />
-          </button>
-        )}
-        {isGroupChat && aiGroupSummaryEnabled && (
-          <button
-            className={`icon-btn group-summary-btn ${showGroupSummaryPanel ? 'active' : ''}`}
-            onClick={onToggleGroupSummaryPanel}
-            disabled={!currentSessionId}
-            title="AI 群聊总结"
-            aria-label="AI 群聊总结"
-          >
-            <Newspaper size={18} />
-          </button>
-        )}
         {!standaloneSessionWindow && isGroupChat && (
           <button className="icon-btn group-analytics-btn" onClick={onGroupAnalytics} title="群聊分析">
             <BarChart3 size={18} />
@@ -297,14 +249,11 @@ function areEqual(prev: ChatHeaderProps, next: ChatHeaderProps) {
     prev.isGroupChat === next.isGroupChat &&
     prev.standaloneSessionWindow === next.standaloneSessionWindow &&
     prev.showGroupMembersPanel === next.showGroupMembersPanel &&
-    prev.showGroupSummaryPanel === next.showGroupSummaryPanel &&
     prev.showJumpPopover === next.showJumpPopover &&
     prev.showInSessionSearch === next.showInSessionSearch &&
     prev.showDetailPanel === next.showDetailPanel &&
-    prev.aiGroupSummaryEnabled === next.aiGroupSummaryEnabled &&
     prev.shouldHideStandaloneDetailButton === next.shouldHideStandaloneDetailButton &&
     prev.isPrivateSnsSupported === next.isPrivateSnsSupported &&
-    prev.isAgentSupported === next.isAgentSupported &&
     prev.isExportActionBusy === next.isExportActionBusy &&
     prev.isCurrentSessionExporting === next.isCurrentSessionExporting &&
     prev.isPreparingExportDialog === next.isPreparingExportDialog &&
@@ -315,16 +264,12 @@ function areEqual(prev: ChatHeaderProps, next: ChatHeaderProps) {
     prev.isBatchDecrypting === next.isBatchDecrypting &&
     prev.batchImageDecryptProgress?.current === next.batchImageDecryptProgress?.current &&
     prev.batchImageDecryptProgress?.total === next.batchImageDecryptProgress?.total &&
-    prev.isTriggeringSessionInsight === next.isTriggeringSessionInsight &&
     prev.isInsertingTextMessage === next.isInsertingTextMessage &&
     prev.isRefreshingMessages === next.isRefreshingMessages &&
     prev.isLoadingMessages === next.isLoadingMessages &&
     prev.currentSessionId === next.currentSessionId &&
     prev.jumpCalendarWrapRef === next.jumpCalendarWrapRef &&
-    prev.onTriggerSessionInsight === next.onTriggerSessionInsight &&
     prev.onInsertTextMessage === next.onInsertTextMessage &&
-    prev.onOpenAgent === next.onOpenAgent &&
-    prev.onToggleGroupSummaryPanel === next.onToggleGroupSummaryPanel &&
     prev.onGroupAnalytics === next.onGroupAnalytics &&
     prev.onToggleGroupMembersPanel === next.onToggleGroupMembersPanel &&
     prev.onExportCurrentSession === next.onExportCurrentSession &&

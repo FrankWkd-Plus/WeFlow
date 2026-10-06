@@ -51,7 +51,6 @@ export default function NotificationWindow() {
                 id: `noti_${timestamp}_${Math.random().toString(36).substr(2, 9)}`,
                 sessionId: data.sessionId,
                 channel: data.channel,
-                insightRecordId: data.insightRecordId,
                 targetRoute: data.targetRoute,
                 title: data.title,
                 content: data.content,
@@ -229,11 +228,10 @@ export default function NotificationWindow() {
     }
 
     const handleClick = (data: NotificationData) => {
-        if (data.targetRoute || data.channel === 'ai-insight') {
+        if (data.targetRoute) {
             window.electronAPI.notification?.click({
                 sessionId: data.sessionId,
                 channel: data.channel,
-                insightRecordId: data.insightRecordId,
                 targetRoute: data.targetRoute
             })
         } else {
